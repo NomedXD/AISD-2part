@@ -1,0 +1,197 @@
+unit Unit1;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Grids, Vcl.ComCtrls,
+  Vcl.StdCtrls;
+
+type
+  TForm1 = class(TForm)
+    Edit1: TEdit;
+    Button1: TButton;
+    Label2: TLabel;
+    Direct: TEdit;
+    Reverse: TEdit;
+    Symmetric: TEdit;
+    Label1: TLabel;
+    Label3: TLabel;
+    Image1: TImage;
+    procedure Button1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+  Tree = ^TrElem;
+
+  TrElem = record
+    Left: Tree;
+    Right: Tree;
+    Value: Integer;
+    Thread: Boolean;
+    X, Y: Integer;
+  end;
+
+var
+  Form1: TForm1;
+  TreeHead: Tree;
+  CurrStrTree: ansistring;
+  Deep:integer;
+  left,right:integer;
+
+implementation
+
+{$R *.dfm}
+
+procedure addElem(El: Integer; var Pointer: Tree);
+begin
+  if Pointer = nil then // Add leaf
+  begin
+    New(Pointer);
+    Pointer^.Value := El;
+    Pointer^.Left := nil;
+    Pointer^.Right := nil;
+    Pointer^.Thread := False;
+    Pointer^.X:=400-(left*60)+(right*60);
+    Pointer^.Y:=0+(deep*50);
+  end
+  else if El < Pointer^.Value then
+  begin
+    Inc(deep);
+    Inc(Left);
+    addElem(El, Pointer^.Left) // Less - to left
+  end
+
+  else
+  begin
+    Inc(deep);
+    Inc(Right);
+    addElem(El, Pointer^.Right) // Bigger - to right
+  end;
+end;
+
+function directGo(El: Tree): ansistring;
+begin
+  if El = nil then
+  begin
+    Result := '0 ';
+    Exit;
+  end;
+
+  Result := Result + '(' + IntToStr(El^.Value) + ')' + ' ';
+
+  // Left subTree
+  Result := Result + directGo(El^.Left);
+  Result := Result + IntToStr(El^.Value) + ' ';
+
+  // Right subTree
+  Result := Result + directGo(El^.Right);
+  Result := Result + IntToStr(El^.Value) + ' ';
+end;
+
+function reverseGo(El:Tree):ansistring;
+begin
+  if El = nil then
+  begin
+    Result := '0 ';
+    Exit;
+  end;
+
+  Result := Result + IntToStr(El^.Value) + ' ';
+  Result :=Result+reverseGo(El.Left);
+
+  Result:=Result+IntToStr(El^.Value)+ ' ';
+  Result :=Result+reverseGo(El.Right);
+
+  Result := Result + '(' + IntToStr(El^.Value) + ')' + ' ';
+end;
+
+function symmetricGo(El:Tree):ansistring;
+begin
+  if El = nil then
+  begin
+    Result :='0 ';
+    Exit;
+  end;
+
+  Result := Result + IntToStr(El^.Value) + ' ';
+  Result :=Result+symmetricGo(El.Left);
+  Result := Result + '(' + IntToStr(El^.Value) + ')' + ' ';
+
+  Result :=Result+symmetricGo(El.Right);
+  Result := Result + IntToStr(El^.Value) + ' ';
+
+end;
+
+procedure TreeClear(PointerHead: Tree);
+begin
+  if PointerHead = nil then
+  begin
+
+    Exit;
+  end;
+  TreeClear(PointerHead.Left);
+  TreeClear(PointerHead.Right);
+  Dispose(PointerHead);
+
+end;
+
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  i: Integer;
+  arr: array of ansistring;
+  Index: Integer;
+begin
+  Direct.Clear;
+  Symmetric.Clear;
+  Reverse.Clear;
+  TreeClear(TreeHead);
+
+  Index := 0;
+  Setlength(arr, 1);
+  CurrStrTree := Edit1.Text;
+  for i := 1 to length(CurrStrTree) do
+  begin
+    if CurrStrTree[i] <> ',' then
+    begin
+      arr[Index] := arr[Index] + CurrStrTree[i];
+    end
+    else
+    begin
+      Inc(Index);
+      Setlength(arr, index + 1);
+    end;
+
+  end;
+  for i := 0 to length(arr) - 1 do
+  begin
+    deep:=0;
+    left:=0;
+    right:=0;
+    addElem(StrToInt(arr[i]), TreeHead);
+  end;
+  Direct.Text := directGo(TreeHead);
+  Reverse.Text  :=reverseGo(TreeHead);
+  Symmetric.Text:=symmetricGo(TreeHead);
+
+  //Form1.Image1.Canvas.Ellipse(TreeHead.X, TreeHead.Y, TreeHead.X+45,TreeHead.Y+45);
+
+end;
+
+procedure drawTree(PointerHead:Tree);
+begin
+  if PointerHead = nil then
+  begin
+    Exit;
+  end;
+  Form1.Image1.Canvas.Ellipse(TreeHead.X, TreeHead.Y, TreeHead.X+45,TreeHead.Y+45);
+  drawTree(PointerHead.Left);
+  drawTree(PointerHead.Right);
+
+end;
+
+end.
